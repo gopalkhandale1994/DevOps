@@ -1,7 +1,10 @@
 # syntax=docker/dockerfile:experimental
 # Build: DOCKER_BUILDKIT=1 docker build --ssh default -t object-service .
 
-FROM mhart/alpine-node:14.17.3
+FROM mhart/alpine-node:14.17.3 AS base
+
+# Use Alpine 3.14 as the base image
+FROM alpine:3.14
 
 # Creates a non-root-user.
 RUN addgroup -S dd && adduser -S -g dd dd
@@ -10,10 +13,9 @@ ENV APP=/home/dd
 
 # Install required packages and build dependencies with specific versions to resolve vulnerabilities
 RUN apk update \
-    && apk upgrade \
     && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1l-r0 \
     && apk add --no-cache --virtual .build-deps gcc zlib=1.2.11-r4 libc-dev bsd-compat-headers py-setuptools \
-    && apk add --update python2 python3 make g++ curl \
+    && apk add python2 python3 make g++ curl \
     && curl -o /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
     && curl -LO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.32-r0/glibc-2.32-r0.apk \
     && apk add glibc-2.32-r0.apk \
@@ -32,13 +34,13 @@ RUN mkdir -p /home/dd/.ssh \
 WORKDIR $APP
 
 # Copy package.json file
-COPY --chown=dd:dd ./package.json .
+COPY --from=base --chown=dd:dd /package.json .
 
 # Install node modules
 RUN --mount=type=ssh npm install
 
 # Copy other files from src
-COPY --chown=dd:dd ./src ./src
+COPY --from=base --chown=dd:dd /src ./src
 
 # Expose port
 EXPOSE 8080
@@ -46,3 +48,4 @@ EXPOSE 8080
 # Commands to be fired from CMD as the user
 USER dd
 CMD ["npm", "run", "start-dev"]
+
