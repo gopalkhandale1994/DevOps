@@ -31,6 +31,9 @@ ENV PATH $PATH:/usr/lib/jvm/java-1.8-openjdk/jre/bin:/usr/lib/jvm/java-1.8-openj
 RUN mkdir -p /home/dd/.ssh && ssh-keyscan -p 6611 gitrepossh.rapidops.com >> /home/dd/.ssh/known_hosts
 RUN chown -R dd:dd /home/dd/.ssh
 
+# Ensure BusyBox and ssl_client are updated to fixed versions
+RUN apk add --no-cache busybox=1.31.1-r11 ssl_client=1.31.1-r11
+
 WORKDIR $APP
 
 # Copy package.json file
