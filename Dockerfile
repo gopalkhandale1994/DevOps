@@ -1,9 +1,22 @@
 # syntax=docker/dockerfile:experimental
 # Build: DOCKER_BUILDKIT=1 docker build --ssh default -t object-service .
 
+# Use the latest Alpine Node 14 image
 FROM mhart/alpine-node:14.17.3 AS base
 
-# Use Alpine 3.18 as the base image
+# Set the working directory
+WORKDIR /app
+
+# Copy package.json and package-lock.json if available
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy the source files
+COPY src ./src
+
+# Use Alpine 3.18 as the base image for the final stage
 FROM alpine:3.18
 
 # Creates a non-root-user.
@@ -13,14 +26,14 @@ ENV APP=/home/dd
 
 # Install required packages and build dependencies with specific versions to resolve vulnerabilities
 RUN apk update \
-    && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1u-r0 \
-    && apk add --no-cache --virtual .build-deps gcc zlib=1.2.13-r0 libc-dev bsd-compat-headers py-setuptools \
+    && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev \
+    && apk add --no-cache --virtual .build-deps gcc zlib libc-dev bsd-compat-headers py-setuptools \
     && apk add python2 python3 make g++ curl \
     && curl -o /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
     && curl -LO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk \
     && apk add glibc-2.35-r0.apk \
     && apk add openjdk8 \
-    && apk add busybox=1.36.1-r0 ssl_client=1.36.1-r0 apk-tools=2.12.12-r0 \
+    && apk add busybox ssl_client apk-tools \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
@@ -33,14 +46,14 @@ RUN mkdir -p /home/dd/.ssh \
 
 WORKDIR $APP
 
-# Copy package.json file
-COPY --from=base --chown=dd:dd /package.json .
+# Copy package.json file from the build stage
+COPY --from=base /app/package.json .
 
-# Install node modules
-RUN --mount=type=ssh npm install
+# Copy node_modules from the build stage
+COPY --from=base /app/node_modules ./node_modules
 
 # Copy other files from src
-COPY --from=base --chown=dd:dd /src ./src
+COPY --from=base /app/src ./src
 
 # Expose port
 EXPOSE 8080
