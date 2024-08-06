@@ -3,8 +3,8 @@
 
 FROM mhart/alpine-node:14.17.3 AS base
 
-# Use Alpine 3.14 as the base image
-FROM alpine:3.14
+# Use Alpine 3.18 as the base image
+FROM alpine:3.18
 
 # Creates a non-root-user.
 RUN addgroup -S dd && adduser -S -g dd dd
@@ -13,14 +13,14 @@ ENV APP=/home/dd
 
 # Install required packages and build dependencies with specific versions to resolve vulnerabilities
 RUN apk update \
-    && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1l-r0 \
-    && apk add --no-cache --virtual .build-deps gcc zlib=1.2.11-r4 libc-dev bsd-compat-headers py-setuptools \
+    && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1u-r0 \
+    && apk add --no-cache --virtual .build-deps gcc zlib=1.2.13-r0 libc-dev bsd-compat-headers py-setuptools \
     && apk add python2 python3 make g++ curl \
     && curl -o /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
-    && curl -LO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.32-r0/glibc-2.32-r0.apk \
-    && apk add glibc-2.32-r0.apk \
+    && curl -LO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.35-r0/glibc-2.35-r0.apk \
+    && apk add glibc-2.35-r0.apk \
     && apk add openjdk8 \
-    && apk add busybox=1.31.1-r11 ssl_client=1.31.1-r11 apk-tools=2.10.7-r0 \
+    && apk add busybox=1.36.1-r0 ssl_client=1.36.1-r0 apk-tools=2.12.12-r0 \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
@@ -48,4 +48,5 @@ EXPOSE 8080
 # Commands to be fired from CMD as the user
 USER dd
 CMD ["npm", "run", "start-dev"]
+
 
