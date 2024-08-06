@@ -9,13 +9,16 @@ RUN addgroup -S dd && adduser -S -g dd dd
 ENV APP=/home/dd
 
 # Install required packages and build dependencies with specific versions to resolve vulnerabilities
-RUN apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1l-r0 \
+RUN apk update \
+    && apk upgrade \
+    && apk add --no-cache openssh-client git bash ca-certificates lz4-dev musl-dev cyrus-sasl-dev openssl=1.1.1l-r0 \
     && apk add --no-cache --virtual .build-deps gcc zlib=1.2.11-r4 libc-dev bsd-compat-headers py-setuptools \
     && apk add --update python2 python3 make g++ curl \
     && curl -o /etc/apk/keys/sgerrand.rsa.pub https://alpine-pkgs.sgerrand.com/sgerrand.rsa.pub \
     && curl -LO https://github.com/sgerrand/alpine-pkg-glibc/releases/download/2.32-r0/glibc-2.32-r0.apk \
     && apk add glibc-2.32-r0.apk \
     && apk add openjdk8 \
+    && apk add busybox=1.31.1-r11 ssl_client=1.31.1-r11 apk-tools=2.10.7-r0 \
     && rm -rf /var/cache/apk/*
 
 ENV JAVA_HOME /usr/lib/jvm/java-1.8-openjdk
@@ -25,9 +28,6 @@ ENV PATH $PATH:/usr/lib/jvm/java-1.8-openjdk/jre/bin:/usr/lib/jvm/java-1.8-openj
 RUN mkdir -p /home/dd/.ssh \
     && ssh-keyscan -p 6611 gitrepossh.rapidops.com >> /home/dd/.ssh/known_hosts \
     && chown -R dd:dd /home/dd/.ssh
-
-# Ensure BusyBox and ssl_client are updated to fixed versions
-RUN apk add --no-cache busybox=1.31.1-r11 ssl_client=1.31.1-r11 apk-tools=2.10.7-r0
 
 WORKDIR $APP
 
@@ -46,4 +46,3 @@ EXPOSE 8080
 # Commands to be fired from CMD as the user
 USER dd
 CMD ["npm", "run", "start-dev"]
-
