@@ -1,6 +1,3 @@
-# syntax=docker/dockerfile:experimental
-# Build: DOCKER_BUILDKIT=1 docker build --ssh default -t object-service .
-
 FROM mhart/alpine-node:14.21.3
 #FROM gcr.io/c-and-b-2019/c-and-b-base:latest
 
