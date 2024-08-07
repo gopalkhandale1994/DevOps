@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:experimental
 # Build: DOCKER_BUILDKIT=1 docker build --ssh default -t object-service .
 
-FROM node:lts-buster
+FROM node:22.5.0-bookworm-slim 
 
 # Creates a non-root user
 RUN addgroup -S dd && adduser -S -g dd dd
