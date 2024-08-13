@@ -1,4 +1,3 @@
-
 FROM node:18-alpine
 
 # Add user and group
